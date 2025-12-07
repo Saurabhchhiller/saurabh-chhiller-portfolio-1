@@ -1,0 +1,3 @@
+# Vercel build configuration
+# Do not ignore public folder
+!public
