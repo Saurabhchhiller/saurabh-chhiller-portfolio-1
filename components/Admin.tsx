@@ -16,6 +16,8 @@ const Admin: React.FC<AdminProps> = ({ onLogout, currentResumeUrl, onResumeUpdat
   const [file, setFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
+  const [uploadToken, setUploadToken] = useState<string>(() => localStorage.getItem('admin_upload_token') || '');
+  const [tokenSaved, setTokenSaved] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,46 +39,55 @@ const Admin: React.FC<AdminProps> = ({ onLogout, currentResumeUrl, onResumeUpdat
 
   const handleUpload = async () => {
     if (!file) return;
-    
-    // Client-side size check (approx 4.5MB limit for Base64 in LocalStorage)
-    if (file.size > 4.5 * 1024 * 1024) {
+
+    // Client-side size check (limit 10MB here to allow reasonable resumes)
+    if (file.size > 10 * 1024 * 1024) {
       setUploadStatus('error');
-      setUploadMessage('File is too large. Please upload a file smaller than 4.5MB.');
+      setUploadMessage('File is too large. Please upload a file smaller than 10MB.');
       return;
     }
 
     setUploadStatus('uploading');
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
+
       try {
-        const result = e.target?.result as string;
-        localStorage.setItem('custom_resume_url', result);
-        localStorage.setItem('custom_resume_name', file.name);
-        
-        onResumeUpdate(result, file.name);
-        
-        setUploadStatus('success');
-        setUploadMessage('Resume updated successfully! Changes are live.');
-        setTimeout(() => {
-            setUploadStatus('idle');
-            setUploadMessage('');
-        }, 3000);
-      } catch (err) {
-        console.error("Storage failed", err);
-        setUploadStatus('error');
-        setUploadMessage('Failed to save file. It might be too large for browser storage.');
+      const form = new FormData();
+      form.append('resume', file, file.name);
+
+      // Adjust server URL/port if hosted elsewhere
+      const headers: Record<string,string> = {};
+      const savedToken = localStorage.getItem('admin_upload_token');
+      if (savedToken) headers['x-admin-token'] = savedToken;
+
+      const resp = await fetch('/api/upload-resume', {
+        method: 'POST',
+        body: form,
+        headers,
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(errText || 'Upload failed');
       }
-    };
-    reader.onerror = () => {
-        setUploadStatus('error');
-        setUploadMessage('Error reading file.');
-    };
-    
-    // Simulate network delay for UX
-    setTimeout(() => {
-        reader.readAsDataURL(file);
-    }, 1000);
+
+      const data = await resp.json();
+      // server returns { url, message }
+      if (data && data.url) {
+        onResumeUpdate(data.url, file.name);
+        setUploadStatus('success');
+        setUploadMessage(data.message || 'Resume uploaded and published.');
+      } else {
+        throw new Error(data?.message || 'No URL returned');
+      }
+    } catch (err: any) {
+      console.error('Upload error', err);
+      setUploadStatus('error');
+      setUploadMessage(err.message || 'Upload failed.');
+    } finally {
+      setTimeout(() => {
+        setUploadStatus('idle');
+        setUploadMessage('');
+      }, 4000);
+    }
   };
 
   const handleReset = () => {
@@ -203,7 +214,23 @@ const Admin: React.FC<AdminProps> = ({ onLogout, currentResumeUrl, onResumeUpdat
                             <p className="text-slate-500 text-sm">Supported formats: PDF, DOC, DOCX (Max 4.5MB)</p>
                         </div>
                     </div>
-
+                    
+                            <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
+                              <input
+                                type="text"
+                                placeholder="Upload token (kept locally)"
+                                value={uploadToken}
+                                onChange={(e) => { setUploadToken(e.target.value); setTokenSaved(false); }}
+                                className="flex-1 px-4 py-3 border border-slate-300 rounded-xl outline-none"
+                              />
+                              <button
+                                onClick={() => { localStorage.setItem('admin_upload_token', uploadToken); setTokenSaved(true); setTimeout(() => setTokenSaved(false), 2000); }}
+                                className="px-4 py-3 bg-slate-900 text-white rounded-xl font-medium"
+                              >
+                                Save Token
+                              </button>
+                              {tokenSaved && <span className="text-green-600 text-sm">Saved</span>}
+                            </div>
                     {file && (
                         <div className="animate-fade-in">
                             <button 
