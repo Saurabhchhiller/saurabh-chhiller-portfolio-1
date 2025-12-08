@@ -10,6 +10,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Admin from './components/Admin';
 import { RESUME_LINK } from './constants';
 
+// Portfolio App - Blog section removed
 function App() {
   const [view, setView] = useState<'portfolio' | 'admin'>('portfolio');
   const [resumeUrl, setResumeUrl] = useState(RESUME_LINK);
