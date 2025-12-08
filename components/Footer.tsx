@@ -27,8 +27,9 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
             </a>
 
             <a
-              href="https://drive.google.com/u/0/uc?id=1gxQU6IagLnNwmt5sM8cstxMlapcW0pTF&export=download"
-              download="resume.pdf"
+              href="https://drive.google.com/file/d/1gxQU6IagLnNwmt5sM8cstxMlapcW0pTF/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
               className="ml-3 inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-full text-sm font-semibold transition-all transform hover:scale-105 shadow-md"
             >
               Download Resume
