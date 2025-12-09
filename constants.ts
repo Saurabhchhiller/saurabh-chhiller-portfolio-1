@@ -1,6 +1,6 @@
 import { ExperienceItem, SkillCategory, EducationItem, CertificationItem } from './types';
 
-export const RESUME_LINK = "/resume.html"; 
+export const RESUME_LINK = "/resume.pdf"; 
 
 export const SOCIAL_LINKS = {
   linkedin: "https://www.linkedin.com/in/saurabhbusinessanalyst",
