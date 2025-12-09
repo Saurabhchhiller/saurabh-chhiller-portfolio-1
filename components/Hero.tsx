@@ -54,13 +54,20 @@ const Hero: React.FC<HeroProps> = ({ resumeUrl, resumeName }) => {
         </Reveal>
 
         <Reveal variant="fade-up" delay={800}>
-            <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
-            <a 
-                href="#contact"
-                className="flex items-center justify-center gap-2 bg-slate-900/90 text-white px-8 py-4 rounded-full font-medium hover:bg-slate-800 transition-all hover:shadow-xl hover:shadow-slate-500/20 hover:-translate-y-1 active:scale-95 active:translate-y-0 backdrop-blur-sm"
-            >
-                Let's Connect <ArrowRight size={20} />
-            </a>
+                        <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
+                        <a 
+                                href="#contact"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    const el = document.getElementById('contact');
+                                    if (el) {
+                                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }
+                                }}
+                                className="flex items-center justify-center gap-2 bg-slate-900/90 text-white px-8 py-4 rounded-full font-medium hover:bg-slate-800 transition-all hover:shadow-xl hover:shadow-slate-500/20 hover:-translate-y-1 active:scale-95 active:translate-y-0 backdrop-blur-sm"
+                        >
+                                Let's Connect <ArrowRight size={20} />
+                        </a>
             <a 
                 href={resumeUrl}
                 target="_blank"
