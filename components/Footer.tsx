@@ -27,7 +27,8 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
             </a>
 
             <a
-              href="https://drive.google.com/file/d/1gxQU6IagLnNwmt5sM8cstxMlapcW0pTF/view?usp=sharing"
+              href="/resume.pdf"
+              download="Saurabh_Chhiller_Resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="ml-3 inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-full text-sm font-semibold transition-all transform hover:scale-105 shadow-md"
