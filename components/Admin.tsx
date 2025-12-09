@@ -18,6 +18,9 @@ const Admin: React.FC<AdminProps> = ({ onLogout, currentResumeUrl, onResumeUpdat
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadToken, setUploadToken] = useState<string>(() => localStorage.getItem('admin_upload_token') || '');
   const [tokenSaved, setTokenSaved] = useState(false);
+  const [web3ApiKey, setWeb3ApiKey] = useState<string>(() => localStorage.getItem('web3forms_api_key') || '');
+  const [web3Saved, setWeb3Saved] = useState(false);
+  const [web3Status, setWeb3Status] = useState<'unknown' | 'checking' | 'valid' | 'invalid'>('unknown');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,6 +233,70 @@ const Admin: React.FC<AdminProps> = ({ onLogout, currentResumeUrl, onResumeUpdat
                                 Save Token
                               </button>
                               {tokenSaved && <span className="text-green-600 text-sm">Saved</span>}
+                            </div>
+                          
+                            <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center">
+                              <input
+                                type="text"
+                                placeholder="Web3Forms API Key (kept locally)"
+                                value={web3ApiKey}
+                                onChange={(e) => { setWeb3ApiKey(e.target.value); setWeb3Saved(false); setWeb3Status('unknown'); }}
+                                className="flex-1 px-4 py-3 border border-slate-300 rounded-xl outline-none"
+                              />
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => { localStorage.setItem('web3forms_api_key', web3ApiKey); setWeb3Saved(true); setTimeout(() => setWeb3Saved(false), 2000); }}
+                                  className="px-4 py-3 bg-slate-900 text-white rounded-xl font-medium"
+                                >
+                                  Save API Key
+                                </button>
+
+                                <button
+                                  onClick={async () => {
+                                    if (!web3ApiKey) {
+                                      setWeb3Status('invalid');
+                                      return;
+                                    }
+                                    setWeb3Status('checking');
+                                    try {
+                                      const form = new FormData();
+                                      form.append('access_key', web3ApiKey);
+                                      form.append('name', 'Validation Test');
+                                      form.append('email', 'no-reply@example.com');
+                                      form.append('subject', 'API Key Validation');
+                                      form.append('message', 'This is a validation check. Please ignore.');
+
+                                      const resp = await fetch('https://api.web3forms.com/submit', {
+                                        method: 'POST',
+                                        body: form,
+                                      });
+
+                                      if (!resp.ok) {
+                                        setWeb3Status('invalid');
+                                      } else {
+                                        const data = await resp.json();
+                                        if (data?.success) setWeb3Status('valid');
+                                        else setWeb3Status('invalid');
+                                      }
+                                    } catch (err) {
+                                      console.error('Web3Forms validation error', err);
+                                      setWeb3Status('invalid');
+                                    }
+                                    // Do not persist anything here beyond status; saving remains explicit
+                                  }}
+                                  className="px-4 py-3 bg-blue-600 text-white rounded-xl font-medium"
+                                >
+                                  Validate API Key
+                                </button>
+                              </div>
+
+                              <div className="ml-2">
+                                {web3Status === 'unknown' && <span className="text-slate-500 text-sm">Status: Unknown</span>}
+                                {web3Status === 'checking' && <span className="text-slate-500 text-sm">Checking…</span>}
+                                {web3Status === 'valid' && <span className="text-green-600 text-sm flex items-center gap-2"><Check size={14} /> Valid</span>}
+                                {web3Status === 'invalid' && <span className="text-red-600 text-sm flex items-center gap-2"><AlertCircle size={14} /> Invalid</span>}
+                              </div>
+                              {web3Saved && <span className="text-green-600 text-sm">Saved</span>}
                             </div>
                     {file && (
                         <div className="animate-fade-in">

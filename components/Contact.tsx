@@ -88,19 +88,59 @@ const Contact: React.FC = () => {
     }
 
     setStatus('submitting');
-    
-    setTimeout(() => {
+
+    (async () => {
+      try {
+        const storedKey = localStorage.getItem('web3forms_api_key');
+        const ACCESS_KEY = storedKey || '20eaefb5-96fa-496c-8025-4eb8d4e772a6';
+
+        if (ACCESS_KEY) {
+          const form = new FormData();
+          form.append('access_key', ACCESS_KEY);
+          form.append('name', formData.name);
+          form.append('email', formData.email);
+          form.append('subject', formData.subject);
+          form.append('message', formData.message);
+
+          const resp = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            body: form,
+          });
+
+          if (!resp.ok) {
+            const errText = await resp.text();
+            throw new Error(errText || 'Failed to submit form');
+          }
+
+          const data = await resp.json();
+          if (data?.success) {
+            setStatus('success');
+            setFormData({ name: '', email: '', subject: '', message: '' });
+            setTouched({ name: false, email: false, subject: false, message: false });
+            setErrors({ name: '', email: '', subject: '', message: '' });
+            setTimeout(() => setStatus('idle'), 5000);
+            return;
+          } else {
+            throw new Error(data?.message || 'Submission failed');
+          }
+        }
+
+        // Fallback: store locally if no key
         const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]');
         messages.push({ ...formData, date: new Date().toISOString() });
         localStorage.setItem('contact_messages', JSON.stringify(messages));
-        
+
         setStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
         setTouched({ name: false, email: false, subject: false, message: false });
         setErrors({ name: '', email: '', subject: '', message: '' });
-        
         setTimeout(() => setStatus('idle'), 5000);
-    }, 1000);
+      } catch (err: any) {
+        console.error('Contact submit error', err);
+        alert('Failed to send message: ' + (err.message || err));
+        setStatus('idle');
+      }
+    })();
   };
 
   const getInputClassName = (fieldName: keyof typeof errors) => {
